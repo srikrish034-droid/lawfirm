@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Client Management</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script><script src="script.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins';}
+body{display:flex;background:#0f172a;color:white;}
+.sidebar{width:240px;background:#111827;height:100vh;padding:30px 20px;position:fixed;}
+.sidebar h2{text-align:center;margin-bottom:40px;}
+.sidebar a{display:block;color:#cbd5e1;text-decoration:none;margin:15px 0;padding:10px;border-radius:8px;}
+.sidebar a:hover{background:#2563eb;color:white;}
+.main{margin-left:240px;padding:40px;width:100%;}
+.card{background:#1e293b;padding:20px;border-radius:12px;margin-bottom:20px;}
+input{padding:10px;margin:5px;border:none;border-radius:6px;width:200px;}
+button{padding:8px 14px;border:none;border-radius:6px;margin:4px;cursor:pointer;}
+.save{background:#2563eb;color:white;}
+.update{background:#10b981;color:white;}
+.delete{background:#ef4444;color:white;}
+table{width:100%;border-collapse:collapse;background:#1e293b;}
+th,td{padding:12px;text-align:left;}
+th{background:#2563eb;}
+tr:hover{background:#334155;}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+<h2>⚖ LawFirm</h2>
+
+<a href="Dashboard.html">Dashboard</a>
+<a href="Client.html">Clients</a>
+<a href="Case.html">Cases</a>
+<a href="Invoice.html">Invoices</a>
+
+<button onclick="logout()" 
+style="
+width:100%;
+padding:10px;
+margin-top:40px;
+background:#ef4444;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-weight:500;
+">
+Logout
+</button>
+
+</div>
+
+
+<div class="main">
+
+<h1>Client Management</h1>
+
+<div class="card">
+<input type="hidden" id="client_id">
+<input id="full_name" placeholder="Full Name">
+<input id="phone_number" placeholder="Phone">
+<input id="email_address" placeholder="Email">
+<br>
+<button class="save" onclick="saveClient()">Save</button>
+<button class="update" onclick="updateClient()">Update</button>
+<button onclick="resetForm()">Clear</button>
+</div>
+
+<div class="card">
+<table>
+<thead>
+<tr><th>Name</th><th>Phone</th><th>Email</th><th>Action</th></tr>
+</thead>
+<tbody id="clientTable"></tbody>
+</table>
+</div>
+
+</div>
+
+<script>
+const supabaseClient = supabase.createClient(
+"https://nilimvtdacrzikjagooi.supabase.co",
+"sb_publishable_ZikX8pNNMhvjzbjUwnXjNg_fpI2tT_y"
+);
+
+async function loadClients(){
+let {data}=await supabaseClient.from("clients").select("*");
+clientTable.innerHTML="";
+data.forEach(c=>{
+clientTable.innerHTML+=`
+<tr>
+<td>${c.full_name}</td>
+<td>${c.phone_number}</td>
+<td>${c.email_address}</td>
+<td>
+<button onclick="editClient('${c.id}','${c.full_name}','${c.phone_number}','${c.email_address}')">Edit</button>
+<button class="delete" onclick="deleteClient('${c.id}')">Delete</button>
+</td>
+</tr>`;
+});
+}
+
+async function saveClient(){
+await supabaseClient.from("clients").insert([{
+full_name:full_name.value,
+phone_number:phone_number.value,
+email_address:email_address.value
+}]);
+resetForm();
+loadClients();
+}
+
+function editClient(id,name,phone,email){
+client_id.value=id;
+full_name.value=name;
+phone_number.value=phone;
+email_address.value=email;
+}
+
+async function updateClient(){
+await supabaseClient.from("clients")
+.update({
+full_name:full_name.value,
+phone_number:phone_number.value,
+email_address:email_address.value
+})
+.eq("id",client_id.value);
+resetForm();
+loadClients();
+}
+
+async function deleteClient(id){
+await supabaseClient.from("clients").delete().eq("id",id);
+loadClients();
+}
+
+function resetForm(){
+client_id.value="";
+full_name.value="";
+phone_number.value="";
+email_address.value="";
+}
+
+loadClients();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Invoice Management</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="script.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+body{display:flex;background:#0f172a;color:white;}
+
+.sidebar{
+width:240px;
+background:#111827;
+height:100vh;
+padding:30px 20px;
+position:fixed;
+}
+.sidebar h2{text-align:center;margin-bottom:40px;}
+.sidebar a{
+display:block;
+color:#cbd5e1;
+text-decoration:none;
+margin:15px 0;
+padding:10px;
+border-radius:8px;
+}
+.sidebar a:hover{background:#10b981;color:white;}
+
+.main{
+margin-left:240px;
+padding:40px;
+width:100%;
+}
+
+.card{
+background:#1e293b;
+padding:20px;
+border-radius:12px;
+margin-bottom:20px;
+}
+
+input{
+padding:10px;
+margin:6px;
+border:none;
+border-radius:6px;
+width:220px;
+}
+
+button{
+padding:8px 14px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+margin:4px;
+}
+
+.save{background:#10b981;color:white;}
+.update{background:#2563eb;color:white;}
+.delete{background:#ef4444;color:white;}
+.print{background:#f59e0b;color:white;}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:#1e293b;
+border-radius:10px;
+overflow:hidden;
+}
+
+th,td{
+padding:12px;
+text-align:left;
+}
+
+th{background:#10b981;}
+tr:hover{background:#334155;}
+
+.total-display{
+margin-top:10px;
+font-weight:600;
+color:#10b981;
+}
+
+/* Hidden Invoice Template */
+#invoiceTemplate{
+background:white;
+color:black;
+padding:40px;
+width:800px;
+display:none;
+}
+.invoice-header{
+display:flex;
+justify-content:space-between;
+margin-bottom:30px;
+}
+.invoice-title{
+font-size:24px;
+font-weight:bold;
+}
+.invoice-table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+.invoice-table th,.invoice-table td{
+border:1px solid #ddd;
+padding:10px;
+text-align:left;
+}
+.invoice-footer{
+margin-top:30px;
+text-align:right;
+font-weight:bold;
+font-size:18px;
+}
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+<h2>⚖ LawFirm</h2>
+
+<a href="Dashboard.html">Dashboard</a>
+<a href="Client.html">Clients</a>
+<a href="Case.html">Cases</a>
+<a href="Invoice.html">Invoices</a>
+
+<button onclick="logout()" 
+style="
+width:100%;
+padding:10px;
+margin-top:40px;
+background:#ef4444;
+color:white;
+border:none;
+border-radius:8px;
+cursor:pointer;
+font-weight:500;
+">
+Logout
+</button>
+
+</div>
+
+
+<div class="main">
+
+<h1>Invoice Management</h1>
+
+<div class="card">
+<input type="hidden" id="invoice_id">
+<input id="case_no" placeholder="Case No">
+<input id="client_name" placeholder="Client Name">
+<input type="date" id="invoice_date">
+<input id="professional_service_fees" placeholder="Professional Fees">
+<input id="reimburdance_service_fees" placeholder="Reimbursement Fees">
+<div class="total-display" id="previewTotal"></div>
+<br>
+<button class="save" onclick="saveInvoice()">Save</button>
+<button class="update" onclick="updateInvoice()">Update</button>
+<button onclick="resetForm()">Clear</button>
+</div>
+
+<div class="card">
+<table>
+<thead>
+<tr>
+<th>Case No</th>
+<th>Client</th>
+<th>Date</th>
+<th>Total</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody id="invoiceTable"></tbody>
+</table>
+</div>
+
+</div>
+
+<!-- Hidden Printable Invoice Layout -->
+<div id="invoiceTemplate">
+<div class="invoice-header">
+<div>
+<div class="invoice-title">LAW FIRM INVOICE</div>
+<div>Professional Legal Services</div>
+</div>
+<div>
+<div><strong>Date:</strong> <span id="pdfDate"></span></div>
+<div><strong>Case No:</strong> <span id="pdfCase"></span></div>
+</div>
+</div>
+
+<div>
+<strong>Bill To:</strong>
+<p id="pdfClient"></p>
+</div>
+
+<table class="invoice-table">
+<tr>
+<th>Description</th>
+<th>Amount ($)</th>
+</tr>
+<tr>
+<td>Professional Service Fees</td>
+<td id="pdfPro"></td>
+</tr>
+<tr>
+<td>Reimbursement Fees</td>
+<td id="pdfRei"></td>
+</tr>
+</table>
+
+<div class="invoice-footer">
+Total: $<span id="pdfTotal"></span>
+</div>
+</div>
+
+<script>
+const supabaseClient = supabase.createClient(
+"https://nilimvtdacrzikjagooi.supabase.co",
+"sb_publishable_ZikX8pNNMhvjzbjUwnXjNg_fpI2tT_y"
+);
+
+professional_service_fees.oninput =
+reimburdance_service_fees.oninput = function(){
+let total = (parseFloat(professional_service_fees.value||0) +
+parseFloat(reimburdance_service_fees.value||0));
+previewTotal.innerText = "Total: $" + total.toFixed(2);
+};
+
+async function loadInvoices(){
+let {data}=await supabaseClient.from("invoices").select("*");
+invoiceTable.innerHTML="";
+data.forEach(i=>{
+invoiceTable.innerHTML+=`
+<tr>
+<td>${i.case_no}</td>
+<td>${i.client_name}</td>
+<td>${i.invoice_date||""}</td>
+<td>$${i.total_price}</td>
+<td>
+<button onclick="editInvoice('${i.id}','${i.case_no}','${i.client_name}','${i.invoice_date}','${i.professional_service_fees}','${i.reimburdance_service_fees}')">Edit</button>
+<button class="print" onclick="printInvoice('${i.case_no}','${i.client_name}','${i.invoice_date}','${i.professional_service_fees}','${i.reimburdance_service_fees}','${i.total_price}')">Print</button>
+<button class="delete" onclick="deleteInvoice('${i.id}')">Delete</button>
+</td>
+</tr>`;
+});
+}
+
+async function saveInvoice(){
+let total=parseFloat(professional_service_fees.value||0)+
+parseFloat(reimburdance_service_fees.value||0);
+
+await supabaseClient.from("invoices").insert([{
+case_no:case_no.value,
+client_name:client_name.value,
+invoice_date:invoice_date.value,
+professional_service_fees:professional_service_fees.value,
+reimburdance_service_fees:reimburdance_service_fees.value,
+total_price:total
+}]);
+
+resetForm();
+loadInvoices();
+}
+
+function editInvoice(id,caseNo,client,date,pro,rei){
+invoice_id.value=id;
+case_no.value=caseNo;
+client_name.value=client;
+invoice_date.value=date;
+professional_service_fees.value=pro;
+reimburdance_service_fees.value=rei;
+}
+
+async function updateInvoice(){
+let total=parseFloat(professional_service_fees.value||0)+
+parseFloat(reimburdance_service_fees.value||0);
+
+await supabaseClient.from("invoices")
+.update({
+case_no:case_no.value,
+client_name:client_name.value,
+invoice_date:invoice_date.value,
+professional_service_fees:professional_service_fees.value,
+reimburdance_service_fees:reimburdance_service_fees.value,
+total_price:total
+})
+.eq("id",invoice_id.value);
+
+resetForm();
+loadInvoices();
+}
+
+async function deleteInvoice(id){
+await supabaseClient.from("invoices").delete().eq("id",id);
+loadInvoices();
+}
+
+function resetForm(){
+invoice_id.value="";
+case_no.value="";
+client_name.value="";
+invoice_date.value="";
+professional_service_fees.value="";
+reimburdance_service_fees.value="";
+previewTotal.innerText="";
+}
+
+/* ===== PRINT PDF FUNCTION ===== */
+
+async function printInvoice(caseNo,client,date,pro,rei,total){
+
+document.getElementById("pdfCase").innerText=caseNo;
+document.getElementById("pdfClient").innerText=client;
+document.getElementById("pdfDate").innerText=date;
+document.getElementById("pdfPro").innerText=pro;
+document.getElementById("pdfRei").innerText=rei;
+document.getElementById("pdfTotal").innerText=total;
+
+const element=document.getElementById("invoiceTemplate");
+element.style.display="block";
+
+const canvas=await html2canvas(element);
+const imgData=canvas.toDataURL("image/png");
+
+const { jsPDF }=window.jspdf;
+const pdf=new jsPDF("p","mm","a4");
+pdf.addImage(imgData,"PNG",10,10,190,0);
+pdf.save("Invoice_"+caseNo+".pdf");
+
+element.style.display="none";
+}
+
+loadInvoices();
+</script>
+
+</body>
+</html>
