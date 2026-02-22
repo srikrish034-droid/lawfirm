@@ -3,7 +3,7 @@
 <head>
 <title>Client Management</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script><script src="script.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins';}
@@ -23,8 +23,12 @@ table{width:100%;border-collapse:collapse;background:#1e293b;}
 th,td{padding:12px;text-align:left;}
 th{background:#2563eb;}
 tr:hover{background:#334155;}
+.search-sort{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.search-sort input{width:250px;}
+.sort-btn{background:#6366f1;color:white;}
 </style>
 </head>
+
 <body>
 
 <div class="sidebar">
@@ -36,27 +40,16 @@ tr:hover{background:#334155;}
 <a href="Invoice.html">Invoices</a>
 
 <button onclick="logout()" 
-style="
-width:100%;
-padding:10px;
-margin-top:40px;
-background:#ef4444;
-color:white;
-border:none;
-border-radius:8px;
-cursor:pointer;
-font-weight:500;
-">
+style="width:100%;padding:10px;margin-top:40px;background:#ef4444;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;">
 Logout
 </button>
-
 </div>
-
 
 <div class="main">
 
 <h1>Client Management</h1>
 
+<!-- Add Client Form -->
 <div class="card">
 <input type="hidden" id="client_id">
 <input id="full_name" placeholder="Full Name">
@@ -68,10 +61,22 @@ Logout
 <button onclick="resetForm()">Clear</button>
 </div>
 
+<!-- Search & Sort -->
+<div class="card search-sort">
+<input type="text" id="searchInput" placeholder="Search client ..." onkeyup="filterClients()">
+<button class="sort-btn" onclick="sortClients()">Sort A-Z</button>
+</div>
+
+<!-- Client Table -->
 <div class="card">
 <table>
 <thead>
-<tr><th>Name</th><th>Phone</th><th>Email</th><th>Action</th></tr>
+<tr>
+<th>Name</th>
+<th>Phone</th>
+<th>Email</th>
+<th>Action</th>
+</tr>
 </thead>
 <tbody id="clientTable"></tbody>
 </table>
@@ -85,10 +90,25 @@ const supabaseClient = supabase.createClient(
 "sb_publishable_ZikX8pNNMhvjzbjUwnXjNg_fpI2tT_y"
 );
 
+let allClients = [];
+let sortAsc = true;
+
 async function loadClients(){
-let {data}=await supabaseClient.from("clients").select("*");
+let { data, error } = await supabaseClient.from("clients").select("*");
+
+if(error){
+console.error(error);
+return;
+}
+
+allClients = data || [];
+displayClients(allClients);
+}
+
+function displayClients(clients){
 clientTable.innerHTML="";
-data.forEach(c=>{
+
+clients.forEach(c=>{
 clientTable.innerHTML+=`
 <tr>
 <td>${c.full_name}</td>
@@ -102,12 +122,43 @@ clientTable.innerHTML+=`
 });
 }
 
+function filterClients(){
+const searchValue = searchInput.value.toLowerCase();
+
+const filtered = allClients.filter(c =>
+(c.full_name && c.full_name.toLowerCase().includes(searchValue)) ||
+(c.phone_number && c.phone_number.toLowerCase().includes(searchValue)) ||
+(c.email_address && c.email_address.toLowerCase().includes(searchValue))
+);
+
+displayClients(filtered);
+}
+
+function sortClients(){
+sortAsc = !sortAsc;
+
+allClients.sort((a,b)=>{
+if(sortAsc){
+return a.full_name.localeCompare(b.full_name);
+}else{
+return b.full_name.localeCompare(a.full_name);
+}
+});
+
+document.querySelector(".sort-btn").innerText = sortAsc ? "Sort Z-A" : "Sort A-Z";
+
+displayClients(allClients);
+}
+
 async function saveClient(){
+if(!full_name.value) return alert("Full Name required");
+
 await supabaseClient.from("clients").insert([{
 full_name:full_name.value,
 phone_number:phone_number.value,
 email_address:email_address.value
 }]);
+
 resetForm();
 loadClients();
 }
@@ -120,6 +171,8 @@ email_address.value=email;
 }
 
 async function updateClient(){
+if(!client_id.value) return alert("Select a client to update");
+
 await supabaseClient.from("clients")
 .update({
 full_name:full_name.value,
@@ -127,11 +180,14 @@ phone_number:phone_number.value,
 email_address:email_address.value
 })
 .eq("id",client_id.value);
+
 resetForm();
 loadClients();
 }
 
 async function deleteClient(id){
+if(!confirm("Delete this client?")) return;
+
 await supabaseClient.from("clients").delete().eq("id",id);
 loadClients();
 }
@@ -141,6 +197,10 @@ client_id.value="";
 full_name.value="";
 phone_number.value="";
 email_address.value="";
+}
+
+function logout(){
+alert("Logout functionality not connected yet.");
 }
 
 loadClients();

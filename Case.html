@@ -4,7 +4,6 @@
 <title>Case Management</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-<script src="script.js"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
@@ -60,6 +59,16 @@ margin:4px;
 .save{background:#2563eb;color:white;}
 .update{background:#10b981;color:white;}
 .delete{background:#ef4444;color:white;}
+.sort-btn{background:#6366f1;color:white;}
+
+.search-sort{
+display:flex;
+align-items:center;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.search-sort input{width:250px;}
 
 table{
 width:100%;
@@ -78,6 +87,7 @@ th{background:#2563eb;}
 tr:hover{background:#334155;}
 </style>
 </head>
+
 <body>
 
 <div class="sidebar">
@@ -89,27 +99,16 @@ tr:hover{background:#334155;}
 <a href="Invoice.html">Invoices</a>
 
 <button onclick="logout()" 
-style="
-width:100%;
-padding:10px;
-margin-top:40px;
-background:#ef4444;
-color:white;
-border:none;
-border-radius:8px;
-cursor:pointer;
-font-weight:500;
-">
+style="width:100%;padding:10px;margin-top:40px;background:#ef4444;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;">
 Logout
 </button>
-
 </div>
-
 
 <div class="main">
 
 <h1>Case Management</h1>
 
+<!-- Case Form -->
 <div class="card">
 <input type="hidden" id="case_id">
 <input id="client_name" placeholder="Client Name">
@@ -124,6 +123,13 @@ Logout
 <button onclick="resetForm()">Clear</button>
 </div>
 
+<!-- Search & Sort -->
+<div class="card search-sort">
+<input type="text" id="searchInput" placeholder="Search case..." onkeyup="filterCases()">
+<button class="sort-btn" onclick="sortCases()">Sort A-Z</button>
+</div>
+
+<!-- Case Table -->
 <div class="card">
 <table>
 <thead>
@@ -148,17 +154,32 @@ const supabaseClient = supabase.createClient(
 "sb_publishable_ZikX8pNNMhvjzbjUwnXjNg_fpI2tT_y"
 );
 
+let allCases = [];
+let sortAsc = true;
+
 async function loadCases(){
-let {data}=await supabaseClient.from("cases").select("*");
+let { data, error } = await supabaseClient.from("cases").select("*");
+
+if(error){
+console.error(error);
+return;
+}
+
+allCases = data || [];
+displayCases(allCases);
+}
+
+function displayCases(cases){
 caseTable.innerHTML="";
-data.forEach(c=>{
+
+cases.forEach(c=>{
 caseTable.innerHTML+=`
 <tr>
-<td>${c.client_name}</td>
-<td>${c.client_role||""}</td>
-<td>${c.case_reference_number}</td>
-<td>${c.court_no}</td>
-<td>${c.judge_name||""}</td>
+<td>${c.client_name || ""}</td>
+<td>${c.client_role || ""}</td>
+<td>${c.case_reference_number || ""}</td>
+<td>${c.court_no || ""}</td>
+<td>${c.judge_name || ""}</td>
 <td>
 <button onclick="editCase('${c.id}','${c.client_name}','${c.client_role}','${c.case_reference_number}','${c.level_of_urgency}','${c.court_no}','${c.judge_name}')">Edit</button>
 <button class="delete" onclick="deleteCase('${c.id}')">Delete</button>
@@ -167,7 +188,39 @@ caseTable.innerHTML+=`
 });
 }
 
+function filterCases(){
+const searchValue = searchInput.value.toLowerCase();
+
+const filtered = allCases.filter(c =>
+(c.client_name && c.client_name.toLowerCase().includes(searchValue)) ||
+(c.client_role && c.client_role.toLowerCase().includes(searchValue)) ||
+(c.case_reference_number && c.case_reference_number.toLowerCase().includes(searchValue)) ||
+(c.court_no && c.court_no.toLowerCase().includes(searchValue)) ||
+(c.judge_name && c.judge_name.toLowerCase().includes(searchValue))
+);
+
+displayCases(filtered);
+}
+
+function sortCases(){
+sortAsc = !sortAsc;
+
+allCases.sort((a,b)=>{
+if(sortAsc){
+return (a.client_name || "").localeCompare(b.client_name || "");
+}else{
+return (b.client_name || "").localeCompare(a.client_name || "");
+}
+});
+
+document.querySelector(".sort-btn").innerText = sortAsc ? "Sort Z-A" : "Sort A-Z";
+
+displayCases(allCases);
+}
+
 async function saveCase(){
+if(!client_name.value) return alert("Client Name required");
+
 await supabaseClient.from("cases").insert([{
 client_name:client_name.value,
 client_role:client_role.value,
@@ -176,6 +229,7 @@ level_of_urgency:level_of_urgency.value,
 court_no:court_no.value,
 judge_name:judge_name.value
 }]);
+
 resetForm();
 loadCases();
 }
@@ -191,6 +245,8 @@ judge_name.value=judge;
 }
 
 async function updateCase(){
+if(!case_id.value) return alert("Select a case to update");
+
 await supabaseClient.from("cases")
 .update({
 client_name:client_name.value,
@@ -207,6 +263,8 @@ loadCases();
 }
 
 async function deleteCase(id){
+if(!confirm("Delete this case?")) return;
+
 await supabaseClient.from("cases").delete().eq("id",id);
 loadCases();
 }
@@ -219,6 +277,10 @@ case_reference_number.value="";
 level_of_urgency.value="";
 court_no.value="";
 judge_name.value="";
+}
+
+function logout(){
+alert("Logout functionality not connected yet.");
 }
 
 loadCases();

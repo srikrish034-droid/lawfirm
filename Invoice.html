@@ -7,7 +7,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="script.js"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
@@ -64,6 +63,16 @@ margin:4px;
 .update{background:#2563eb;color:white;}
 .delete{background:#ef4444;color:white;}
 .print{background:#f59e0b;color:white;}
+.sort-btn{background:#6366f1;color:white;}
+
+.search-sort{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+align-items:center;
+}
+
+.search-sort input{width:250px;}
 
 table{
 width:100%;
@@ -133,27 +142,16 @@ font-size:18px;
 <a href="Invoice.html">Invoices</a>
 
 <button onclick="logout()" 
-style="
-width:100%;
-padding:10px;
-margin-top:40px;
-background:#ef4444;
-color:white;
-border:none;
-border-radius:8px;
-cursor:pointer;
-font-weight:500;
-">
+style="width:100%;padding:10px;margin-top:40px;background:#ef4444;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:500;">
 Logout
 </button>
-
 </div>
-
 
 <div class="main">
 
 <h1>Invoice Management</h1>
 
+<!-- Invoice Form -->
 <div class="card">
 <input type="hidden" id="invoice_id">
 <input id="case_no" placeholder="Case No">
@@ -161,6 +159,7 @@ Logout
 <input type="date" id="invoice_date">
 <input id="professional_service_fees" placeholder="Professional Fees">
 <input id="reimburdance_service_fees" placeholder="Reimbursement Fees">
+
 <div class="total-display" id="previewTotal"></div>
 <br>
 <button class="save" onclick="saveInvoice()">Save</button>
@@ -168,14 +167,21 @@ Logout
 <button onclick="resetForm()">Clear</button>
 </div>
 
+<!-- Search + Sort -->
+<div class="card search-sort">
+<input type="text" id="searchInput" placeholder="Search invoice..." onkeyup="filterInvoices()">
+<button class="sort-btn" onclick="sortInvoices()">Sort A-Z</button>
+</div>
+
+<!-- Invoice Table -->
 <div class="card">
 <table>
 <thead>
 <tr>
 <th>Case No</th>
 <th>Client</th>
-<th>Date</th>
-<th>Total</th>
+<th>Date (yyyy/mm/dd)</th>
+<th>₹ Total</th>
 <th>Action</th>
 </tr>
 </thead>
@@ -229,6 +235,10 @@ const supabaseClient = supabase.createClient(
 "sb_publishable_ZikX8pNNMhvjzbjUwnXjNg_fpI2tT_y"
 );
 
+let allInvoices = [];
+let sortAsc = true;
+
+/* ===== Auto Total Preview ===== */
 professional_service_fees.oninput =
 reimburdance_service_fees.oninput = function(){
 let total = (parseFloat(professional_service_fees.value||0) +
@@ -236,10 +246,18 @@ parseFloat(reimburdance_service_fees.value||0));
 previewTotal.innerText = "Total: $" + total.toFixed(2);
 };
 
+/* ===== Load ===== */
 async function loadInvoices(){
-let {data}=await supabaseClient.from("invoices").select("*");
+let { data, error } = await supabaseClient.from("invoices").select("*");
+if(error){ console.error(error); return; }
+
+allInvoices = data || [];
+displayInvoices(allInvoices);
+}
+
+function displayInvoices(invoices){
 invoiceTable.innerHTML="";
-data.forEach(i=>{
+invoices.forEach(i=>{
 invoiceTable.innerHTML+=`
 <tr>
 <td>${i.case_no}</td>
@@ -255,6 +273,36 @@ invoiceTable.innerHTML+=`
 });
 }
 
+/* ===== Search ===== */
+function filterInvoices(){
+const searchValue = searchInput.value.toLowerCase();
+
+const filtered = allInvoices.filter(i =>
+(i.case_no && i.case_no.toLowerCase().includes(searchValue)) ||
+(i.client_name && i.client_name.toLowerCase().includes(searchValue)) ||
+(i.invoice_date && i.invoice_date.toLowerCase().includes(searchValue))
+);
+
+displayInvoices(filtered);
+}
+
+/* ===== Sort ===== */
+function sortInvoices(){
+sortAsc = !sortAsc;
+
+allInvoices.sort((a,b)=>{
+if(sortAsc){
+return (a.client_name||"").localeCompare(b.client_name||"");
+}else{
+return (b.client_name||"").localeCompare(a.client_name||"");
+}
+});
+
+document.querySelector(".sort-btn").innerText = sortAsc ? "Sort Z-A" : "Sort A-Z";
+displayInvoices(allInvoices);
+}
+
+/* ===== CRUD ===== */
 async function saveInvoice(){
 let total=parseFloat(professional_service_fees.value||0)+
 parseFloat(reimburdance_service_fees.value||0);
@@ -301,6 +349,7 @@ loadInvoices();
 }
 
 async function deleteInvoice(id){
+if(!confirm("Delete this invoice?")) return;
 await supabaseClient.from("invoices").delete().eq("id",id);
 loadInvoices();
 }
@@ -315,10 +364,8 @@ reimburdance_service_fees.value="";
 previewTotal.innerText="";
 }
 
-/* ===== PRINT PDF FUNCTION ===== */
-
+/* ===== Print PDF ===== */
 async function printInvoice(caseNo,client,date,pro,rei,total){
-
 document.getElementById("pdfCase").innerText=caseNo;
 document.getElementById("pdfClient").innerText=client;
 document.getElementById("pdfDate").innerText=date;
@@ -338,6 +385,10 @@ pdf.addImage(imgData,"PNG",10,10,190,0);
 pdf.save("Invoice_"+caseNo+".pdf");
 
 element.style.display="none";
+}
+
+function logout(){
+alert("Logout functionality not connected yet.");
 }
 
 loadInvoices();

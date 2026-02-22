@@ -2,65 +2,120 @@
 <html>
 <head>
 <title>Law Firm Login</title>
+
+<!-- Google Font -->
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
+
+<!-- Font Awesome CDN -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 <style>
-*{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
 body{
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
     background-image: url("bg.png");
     background-repeat: no-repeat;
     background-size:100% 100%;
-color:white;
+    color:white;
 }
 .login-card{
-background:#1e293b;
-padding:40px;
-border-radius:15px;
-width:350px;
-box-shadow:0 0 30px rgba(0,0,0,0.6);
+    background:#1e293b;
+    padding:40px;
+    border-radius:15px;
+    width:350px;
+    box-shadow:0 0 30px rgba(0,0,0,0.6);
 }
 input{
-width:100%;
-padding:12px;
-margin:10px 0;
-border:none;
-border-radius:8px;
+    width:100%;
+    padding:12px;
+    margin:10px 0;
+    border:none;
+    border-radius:8px;
+}
+.password-wrapper{
+    position:relative;
+}
+.password-wrapper input{
+    padding-right:45px;
+}
+.toggle-eye{
+    position:absolute;
+    right:15px;
+    top:50%;
+    transform:translateY(-50%);
+    cursor:pointer;
+    color:#555;
+    font-size:18px;
+}
+.toggle-eye:hover{
+    color:#2563eb;
 }
 button{
-width:100%;
-padding:12px;
-border:none;
-border-radius:8px;
-background:#2563eb;
-color:white;
-cursor:pointer;
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:#2563eb;
+    color:white;
+    cursor:pointer;
 }
-button:hover{background:#1d4ed8;}
-h2{text-align:center;margin-bottom:20px;}
+button:hover{
+    background:#1d4ed8;
+}
+h2{
+    text-align:center;
+    margin-bottom:20px;
+}
 </style>
 </head>
 <body>
 
 <div class="login-card">
 <h2>⚖ Law Firm Portal</h2>
+
 <input type="email" id="email" placeholder="Email">
-<input type="password" id="password" placeholder="Password">
+
+<div class="password-wrapper">
+    <input type="password" id="password" placeholder="Password">
+    <i class="fa-solid fa-eye toggle-eye" onclick="togglePassword()" id="eyeIcon"></i>
+</div>
+
 <button onclick="login()">Login</button>
 </div>
 
 <script>
-function login(){
-const email=document.getElementById("email").value;
-const password=document.getElementById("password").value;
+function togglePassword(){
+    const passwordField = document.getElementById("password");
+    const eyeIcon = document.getElementById("eyeIcon");
 
-if(email==="lawyer034@cbedc.com" && password==="Lawyer@034"){
-window.location="Dashboard.html";
-}else{
-alert("Invalid Credentials");
+    if(passwordField.type === "password"){
+        passwordField.type = "text";
+        eyeIcon.classList.remove("fa-eye");
+        eyeIcon.classList.add("fa-eye-slash");
+    } else {
+        passwordField.type = "password";
+        eyeIcon.classList.remove("fa-eye-slash");
+        eyeIcon.classList.add("fa-eye");
+    }
 }
+
+function login(){
+    const email=document.getElementById("email").value;
+    const password=document.getElementById("password").value;
+
+    if(email==="lawyer034@cbedc.com" && password==="Lawyer@034"){
+        window.location="Dashboard.html";
+    }else{
+        alert("Invalid Credentials");
+    }
 }
 </script>
 
