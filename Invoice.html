@@ -263,7 +263,7 @@ invoiceTable.innerHTML+=`
 <td>${i.case_no}</td>
 <td>${i.client_name}</td>
 <td>${i.invoice_date||""}</td>
-<td>$${i.total_price}</td>
+<td>₹${i.total_price}</td>
 <td>
 <button onclick="editInvoice('${i.id}','${i.case_no}','${i.client_name}','${i.invoice_date}','${i.professional_service_fees}','${i.reimburdance_service_fees}')">Edit</button>
 <button class="print" onclick="printInvoice('${i.case_no}','${i.client_name}','${i.invoice_date}','${i.professional_service_fees}','${i.reimburdance_service_fees}','${i.total_price}')">Print</button>
@@ -395,4 +395,5 @@ loadInvoices();
 </script>
 
 </body>
+
 </html>
