@@ -115,7 +115,7 @@ Logout
 <input id="client_role" placeholder="Client Role">
 <input id="case_reference_number" placeholder="Case Reference No">
 <input id="level_of_urgency" placeholder="Urgency Level">
-<input id="court_no" placeholder="Court No">
+<input id="case_details" placeholder="Case Details">
 <input id="judge_name" placeholder="Judge Name">
 <br>
 <button class="save" onclick="saveCase()">Save</button>
@@ -137,7 +137,7 @@ Logout
 <th>Client</th>
 <th>Role</th>
 <th>Reference No</th>
-<th>Court</th>
+<th>Case Details</th>
 <th>Judge</th>
 <th>Action</th>
 </tr>
@@ -178,10 +178,10 @@ caseTable.innerHTML+=`
 <td>${c.client_name || ""}</td>
 <td>${c.client_role || ""}</td>
 <td>${c.case_reference_number || ""}</td>
-<td>${c.court_no || ""}</td>
+<td>${c.case_details || ""}</td>
 <td>${c.judge_name || ""}</td>
 <td>
-<button onclick="editCase('${c.id}','${c.client_name}','${c.client_role}','${c.case_reference_number}','${c.level_of_urgency}','${c.court_no}','${c.judge_name}')">Edit</button>
+<button onclick="editCase('${c.id}','${c.client_name}','${c.client_role}','${c.case_reference_number}','${c.level_of_urgency}','${c.case_details}','${c.judge_name}')">Edit</button>
 <button class="delete" onclick="deleteCase('${c.id}')">Delete</button>
 </td>
 </tr>`;
@@ -195,7 +195,7 @@ const filtered = allCases.filter(c =>
 (c.client_name && c.client_name.toLowerCase().includes(searchValue)) ||
 (c.client_role && c.client_role.toLowerCase().includes(searchValue)) ||
 (c.case_reference_number && c.case_reference_number.toLowerCase().includes(searchValue)) ||
-(c.court_no && c.court_no.toLowerCase().includes(searchValue)) ||
+(c.case_details && c.case_details.toLowerCase().includes(searchValue)) ||
 (c.judge_name && c.judge_name.toLowerCase().includes(searchValue))
 );
 
@@ -226,7 +226,7 @@ client_name:client_name.value,
 client_role:client_role.value,
 case_reference_number:case_reference_number.value,
 level_of_urgency:level_of_urgency.value,
-court_no:court_no.value,
+case_details:case_details.value,
 judge_name:judge_name.value
 }]);
 
@@ -234,13 +234,13 @@ resetForm();
 loadCases();
 }
 
-function editCase(id,name,role,ref,urgency,court,judge){
+function editCase(id,name,role,ref,urgency,details,judge){
 case_id.value=id;
 client_name.value=name;
 client_role.value=role;
 case_reference_number.value=ref;
 level_of_urgency.value=urgency;
-court_no.value=court;
+case_details.value=details;
 judge_name.value=judge;
 }
 
@@ -253,7 +253,7 @@ client_name:client_name.value,
 client_role:client_role.value,
 case_reference_number:case_reference_number.value,
 level_of_urgency:level_of_urgency.value,
-court_no:court_no.value,
+case_details:case_details.value,
 judge_name:judge_name.value
 })
 .eq("id",case_id.value);
@@ -275,7 +275,7 @@ client_name.value="";
 client_role.value="";
 case_reference_number.value="";
 level_of_urgency.value="";
-court_no.value="";
+case_details.value="";
 judge_name.value="";
 }
 
