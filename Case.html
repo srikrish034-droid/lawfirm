@@ -120,6 +120,7 @@ Logout
 <input id="level_of_urgency" placeholder="Urgency Level">
 <input id="case_details" placeholder="Case Details">
 <input id="judge_name" placeholder="Judge Name">
+<input id="section" placeholder="Section">
 <br>
 <button class="save" onclick="saveCase()">Save</button>
 <button class="update" onclick="updateCase()">Update</button>
@@ -142,6 +143,7 @@ Logout
 <th>Reference No</th>
 <th>Case Details</th>
 <th>Judge</th>
+<th>Section</th>
 <th>Action</th>
 </tr>
 </thead>
@@ -183,10 +185,11 @@ caseTable.innerHTML+=`
 <td>${c.case_reference_number || ""}</td>
 <td>${c.case_details || ""}</td>
 <td>${c.judge_name || ""}</td>
+<td>${c.section || ""}</td>
 <td>
-<button onclick="editCase('${c.id}','${c.client_name}','${c.client_role}','${c.case_reference_number}','${c.level_of_urgency}','${c.case_details}','${c.judge_name}')">Edit</button>
+<button onclick="editCase('${c.id}','${c.client_name}','${c.client_role}','${c.case_reference_number}','${c.level_of_urgency}','${c.case_details}','${c.judge_name}','${c.section}')">Edit</button>
 <button class="delete" onclick="deleteCase('${c.id}')">Delete</button>
-<button class="download" onclick="downloadPDF('${c.client_name}','${c.client_role}','${c.case_reference_number}','${c.level_of_urgency}','${c.case_details}','${c.judge_name}')">Download</button>
+<button class="download" onclick="downloadPDF('${c.client_name}','${c.client_role}','${c.case_reference_number}','${c.level_of_urgency}','${c.case_details}','${c.judge_name}','${c.section}')">Download</button>
 </td>
 </tr>`;
 });
@@ -200,7 +203,8 @@ const filtered = allCases.filter(c =>
 (c.client_role && c.client_role.toLowerCase().includes(searchValue)) ||
 (c.case_reference_number && c.case_reference_number.toLowerCase().includes(searchValue)) ||
 (c.case_details && c.case_details.toLowerCase().includes(searchValue)) ||
-(c.judge_name && c.judge_name.toLowerCase().includes(searchValue))
+(c.judge_name && c.judge_name.toLowerCase().includes(searchValue)) ||
+(c.section && c.section.toLowerCase().includes(searchValue))
 );
 
 displayCases(filtered);
@@ -231,14 +235,15 @@ client_role:client_role.value,
 case_reference_number:case_reference_number.value,
 level_of_urgency:level_of_urgency.value,
 case_details:case_details.value,
-judge_name:judge_name.value
+judge_name:judge_name.value,
+section:section.value
 }]);
 
 resetForm();
 loadCases();
 }
 
-function editCase(id,name,role,ref,urgency,details,judge){
+function editCase(id,name,role,ref,urgency,details,judge,sec){
 case_id.value=id;
 client_name.value=name;
 client_role.value=role;
@@ -246,6 +251,7 @@ case_reference_number.value=ref;
 level_of_urgency.value=urgency;
 case_details.value=details;
 judge_name.value=judge;
+section.value = sec;
 }
 
 async function updateCase(){
@@ -258,7 +264,8 @@ client_role:client_role.value,
 case_reference_number:case_reference_number.value,
 level_of_urgency:level_of_urgency.value,
 case_details:case_details.value,
-judge_name:judge_name.value
+judge_name:judge_name.value,
+section:section.value
 })
 .eq("id",case_id.value);
 
@@ -281,6 +288,7 @@ case_reference_number.value="";
 level_of_urgency.value="";
 case_details.value="";
 judge_name.value="";
+section.value="";
 }
 
 function logout(){
@@ -290,7 +298,7 @@ alert("Logout functionality not connected yet.");
 // =======================
 // Download PDF Function
 // =======================
-function downloadPDF(client, role, ref, urgency, details, judge){
+function downloadPDF(client, role, ref, urgency, details, judge, sec){
 const { jsPDF } = window.jspdf;
 const doc = new jsPDF({ orientation: "landscape" });
 
@@ -298,8 +306,8 @@ doc.setFontSize(18);
 doc.text("Case Details", 14, 20);
 
 doc.autoTable({
-head:[["Client","Role","Reference No","Urgency","Case Details","Judge"]],
-body:[[client,role,ref,urgency,details,judge]],
+head:[["Client","Role","Reference No","Urgency","Case Details","Judge","Section"]],
+body:[[client,role,ref,urgency,details,judge,sec]],
 startY:30,
 styles:{fontSize:12,cellPadding:4}
 });
