@@ -4,6 +4,8 @@
 <title>Case Management</title>
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
 <style>
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Poppins',sans-serif;}
@@ -60,6 +62,7 @@ margin:4px;
 .update{background:#10b981;color:white;}
 .delete{background:#ef4444;color:white;}
 .sort-btn{background:#6366f1;color:white;}
+.download{background:#f59e0b;color:white;}
 
 .search-sort{
 display:flex;
@@ -183,6 +186,7 @@ caseTable.innerHTML+=`
 <td>
 <button onclick="editCase('${c.id}','${c.client_name}','${c.client_role}','${c.case_reference_number}','${c.level_of_urgency}','${c.case_details}','${c.judge_name}')">Edit</button>
 <button class="delete" onclick="deleteCase('${c.id}')">Delete</button>
+<button class="download" onclick="downloadPDF('${c.client_name}','${c.client_role}','${c.case_reference_number}','${c.level_of_urgency}','${c.case_details}','${c.judge_name}')">Download</button>
 </td>
 </tr>`;
 });
@@ -281,6 +285,26 @@ judge_name.value="";
 
 function logout(){
 alert("Logout functionality not connected yet.");
+}
+
+// =======================
+// Download PDF Function
+// =======================
+function downloadPDF(client, role, ref, urgency, details, judge){
+const { jsPDF } = window.jspdf;
+const doc = new jsPDF({ orientation: "landscape" });
+
+doc.setFontSize(18);
+doc.text("Case Details", 14, 20);
+
+doc.autoTable({
+head:[["Client","Role","Reference No","Urgency","Case Details","Judge"]],
+body:[[client,role,ref,urgency,details,judge]],
+startY:30,
+styles:{fontSize:12,cellPadding:4}
+});
+
+doc.save(`${client}_case.pdf`);
 }
 
 loadCases();
